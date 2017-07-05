@@ -1,4 +1,6 @@
 import requests,urllib
+from textblob import TextBlob
+from textblob.sentiments import NaiveBayesAnalyzer
 
 APP_ACCESS_TOKEN = '1424263315.eea5f47.b72ecf57f66646a38a5e0e81e3747d48'
 BASE_URL = 'https://api.instagram.com/v1/'
@@ -77,7 +79,7 @@ def get_own_post():
             urllib.urlretrieve(image_url,image_name)
             print 'your image has been downloaded'
             caption = own_media['data'][0]['caption']['text']
-            print caption
+            print 'Caption is : %s' % (caption)
         else:
             print 'Post does not exit!!'
     else:
@@ -98,7 +100,7 @@ def get_user_post(insta_username):
     if user_media['meta']['code'] == 200:
         if len(user_media['data']):
             caption = user_media['data'][0]['caption']['text']
-            print caption
+            print 'Caption is : %s' % (caption)
             image_name = user_media['data'][0]['id'] + '.jpeg'
             image_url = user_media['data'][0]['images']['standard_resolution']['url']
             urllib.urlretrieve(image_url,image_name)
@@ -165,17 +167,53 @@ def post_a_comment(insta_username):
         print 'Unable to add comment....Try again!!!'
 
 
+#function to delete negative comments
+
+def delete_negative_comments(insta_username):
+    media_id = get_post_id(insta_username)
+    request_url = (BASE_URL + 'media/%s/comments/?access_token=%s') % (media_id,APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    comment_info = requests.get(request_url).json()
+
+    if comment_info['meta']['code'] ==200:
+        if len(comment_info['data']):
+            for x in range(0,len(comment_info['data'])):
+                comment_id = comment_info['data'][x]['id']
+                comment_text = comment_info['data'][x]['text']
+                blob = TextBlob(comment_text, analyzer=NaiveBayesAnalyzer())
+                if (blob.sentiment.p_neg > blob.sentiments.p_pos):
+                    print 'Negative comment : %s' % (comment_text)
+                    delete_url = (BASE_URL + 'media/%s/comments/%s/?access_token=%s') % (media_id,comment_id,APP_ACCESS_TOKEN)
+                    print 'DELETE request url : %s' % (delete_url)
+                    delete_info = requests.delete(delete_url)
+
+                    if delete_info['meta']['code'] == 200:
+                        print 'Negative comment successfully deleted'
+                    else:
+                        print 'Unable to delete comment'
+                else:
+                    print 'No negative comment'
+        else:
+            print 'There are no existing comments on the post'
+    else:
+        print 'Status code other than 200 recieved'
+
+
 #Function to start instabot
 
 def start_bot():
     while True:
         print '\n'
         print 'Hey! Welcome to instaBot!'
-        print 'Here are your menu options:'
+        print 'What do you wanna do???'
+        print 'Here are your options:'
         print '1.Get your own details\n'
         print '2.Get details of a user by username\n'
         print '3.Get your own recent post\n'
         print '4.Get recent post of a user by username'
+        print '5.Like the recent post of a user'
+        print '6.Make a comment on the recent post of a user'
+        print '7.Delete the negative comments on the post'
         print 'e.Exit'
 
         choice = raw_input("Enter you choice: ")
@@ -195,6 +233,9 @@ def start_bot():
         elif choice == '6':
             insta_username = raw_input("Enter the name of the user: ")
             post_a_comment(insta_username)
+        elif choice == '7':
+            insta_username = raw_input("Enter the username of the user: ")
+            delete_negative_comments(insta_username)
         elif choice == 'e':
             exit()
         else:
