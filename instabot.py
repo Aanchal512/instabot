@@ -5,6 +5,8 @@ from textblob.sentiments import NaiveBayesAnalyzer
 APP_ACCESS_TOKEN = '1424263315.eea5f47.b72ecf57f66646a38a5e0e81e3747d48'
 BASE_URL = 'https://api.instagram.com/v1/'
 
+Hashtag_list = []
+
 
 #Fumction to get your own info
 
@@ -199,6 +201,32 @@ def delete_negative_comments(insta_username):
         print 'Status code other than 200 recieved'
 
 
+#Function to get the list of hashtags of all the posts of a user
+
+def get_hashtags(insta_username):
+    user_id = get_user_id(insta_username)
+
+    if user_id == None:
+        print 'User does not exist'
+
+    request_url = (BASE_URL + 'users/%s/media/recent/?access_token=%s') % (user_id, APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    user_media = requests.get(request_url).json()
+
+    if user_media['meta']['code'] == 200:
+        if len(user_media['data']):
+
+            for x in range(0,len(user_media['data'])):
+                hashtags = user_media['data'][x]['tags']
+                Hashtag_list.append(hashtags)
+            print Hashtag_list
+        else:
+            print 'No recent posts'
+
+    else:
+        print 'Status code other than 200 recieved'
+
+
 #Function to start instabot
 
 def start_bot():
@@ -214,6 +242,7 @@ def start_bot():
         print '5.Like the recent post of a user'
         print '6.Make a comment on the recent post of a user'
         print '7.Delete the negative comments on the post'
+        print '8.Get the list of all the hasgtags of recent posts of a user'
         print 'e.Exit'
 
         choice = raw_input("Enter you choice: ")
@@ -236,6 +265,9 @@ def start_bot():
         elif choice == '7':
             insta_username = raw_input("Enter the username of the user: ")
             delete_negative_comments(insta_username)
+        elif choice == '8':
+            insta_username = raw_input("Enter the username of the user: ")
+            get_hashtags(insta_username)
         elif choice == 'e':
             exit()
         else:
