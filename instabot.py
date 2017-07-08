@@ -1,5 +1,6 @@
 import requests,urllib
 from textblob import TextBlob
+from termcolor import colored
 from textblob.sentiments import NaiveBayesAnalyzer
 import matplotlib.pyplot as plt
 
@@ -117,24 +118,22 @@ def get_user_post(insta_username):
 #Function to get the ID of the recent post of a user by username
 
 def get_post_id(insta_username):
-    user_id = get_user_id(insta_username)
-    if user_id == None:
-        print 'User does not exist'
-        exit()
-    request_url = (BASE_URL + 'users/%s/media/recent/?access_token=%s' % (user_id,APP_ACCESS_TOKEN))
+    request_url = (BASE_URL + 'users/self/media/liked?access_token=%s') % (APP_ACCESS_TOKEN)
     print 'GET request url : %s' % (request_url)
-    user_media = requests.get(request_url).json()
+    own_media = requests.get(request_url).json()
 
-    if user_media['meta']['code'] == 200:
-        if len(user_media['data']):
-            return user_media['data'][0]['id']
+    if own_media['meta']['code'] == 200:
+        if len(own_media['data']):
+            image_name = own_media['data'][0]['id'] + '.jpeg'
+            image_url = own_media['data'][0]['images']['standard_resolution']['url']
+            urllib.urlretrieve(image_url, image_name)
+            print 'your image has been downloaded'
+            caption = own_media['data'][0]['caption']['text']
+            print 'Caption is : %s' % (caption)
         else:
-            print 'No recent post of the user'
-            exit()
+            print 'Post does not exit!!'
     else:
         print 'Status code other than 200 recieved!!!'
-        exit()
-
 
 
 #Function to like post of a user
@@ -143,15 +142,14 @@ def like_a_post(insta_username):
     media_id = get_post_id(insta_username)
 
     request_url = (BASE_URL + 'media/%s/likes') % (media_id)
-    payload = {'access_token': APP_ACCESS_TOKEN}
+    payload = {"access_token": APP_ACCESS_TOKEN}
     print 'POST request url : %s' % (request_url)
-    post_a_like = requests.post(request_url,payload).json()
 
+    post_a_like = requests.post(request_url, payload).json()
     if post_a_like['meta']['code'] == 200:
-        print 'Like was successful!!!'
+        print 'Like was successful!'
     else:
-        print 'Your like was Unsuccessful...Please try again!!!'
-
+        print 'Your like was unsuccessful. Try again!'
 
 #Function to make a comment on the recent post of the user
 
@@ -254,8 +252,8 @@ def hashtag_analysis(insta_username):
 def start_bot():
     while True:
         print '\n'
-        print 'Hey! Welcome to instaBot!'
-        print 'What do you wanna do???'
+        print colored('Hey! Welcome to instaBot!','blue')
+        print colored('What do you wanna do???', 'cyan')
         print 'Here are your options:'
         print '1.Get your own details\n'
         print '2.Get details of a user by username\n'
@@ -264,7 +262,7 @@ def start_bot():
         print '5.Like the recent post of a user'
         print '6.Make a comment on the recent post of a user'
         print '7.Delete the negative comments on the post'
-        print '8.Get the list of all the hashtags of recent posts of a user'
+        print '8.Collecting hashtags and hashtag ananlysis'
         print '9.Exit'
 
         choice = raw_input("Enter your choice: ")
