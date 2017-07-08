@@ -1,9 +1,10 @@
 import requests,urllib
 from textblob import TextBlob
 from textblob.sentiments import NaiveBayesAnalyzer
+import matplotlib.pyplot as plt
 
-APP_ACCESS_TOKEN = '1424263315.eea5f47.b72ecf57f66646a38a5e0e81e3747d48'
 BASE_URL = 'https://api.instagram.com/v1/'
+APP_ACCESS_TOKEN = '1424263315.eea5f47.b72ecf57f66646a38a5e0e81e3747d48'
 
 Hashtag_list = []
 
@@ -203,7 +204,7 @@ def delete_negative_comments(insta_username):
 
 #Function to get the list of hashtags of all the posts of a user
 
-def get_hashtags(insta_username):
+def hashtag_analysis(insta_username):
     user_id = get_user_id(insta_username)
 
     if user_id == None:
@@ -217,11 +218,32 @@ def get_hashtags(insta_username):
         if len(user_media['data']):
 
             for x in range(0,len(user_media['data'])):
-                hashtags = user_media['data'][x]['tags']
-                Hashtag_list.append(hashtags)
+                for hashtags in user_media['data'][x]['tags']:
+                    Hashtag_list.append(hashtags)
             print Hashtag_list
+
+            max_hashtag = max(Hashtag_list)
+            min_hashtag = min(Hashtag_list)
+
+            x = Hashtag_list.count(max_hashtag)
+            y = Hashtag_list.count(min_hashtag)
+
+            total = len(Hashtag_list)
+            a = float(x)*100/ total
+            b = float(y)*100/ total
+
+            labels = max_hashtag, min_hashtag
+            sizes = [a, b]
+            colors = ['red','lightskyblue']
+            explode = (0.2, 0)  # explode the 1st slice
+
+            plt.pie(sizes, explode = explode, labels = labels, colors = colors, autopct = '%1.1f%%',
+                    shadow = True, startangle = 140)
+            plt.axis('equal')
+            plt.title('Hashtag Analysis')
+            plt.show()
         else:
-            print 'No recent posts'
+            print 'No recent posts of the user'
 
     else:
         print 'Status code other than 200 recieved'
@@ -242,10 +264,10 @@ def start_bot():
         print '5.Like the recent post of a user'
         print '6.Make a comment on the recent post of a user'
         print '7.Delete the negative comments on the post'
-        print '8.Get the list of all the hasgtags of recent posts of a user'
-        print 'e.Exit'
+        print '8.Get the list of all the hashtags of recent posts of a user'
+        print '9.Exit'
 
-        choice = raw_input("Enter you choice: ")
+        choice = raw_input("Enter your choice: ")
         if choice == '1':
             self_info()
         elif choice == '2':
@@ -267,8 +289,8 @@ def start_bot():
             delete_negative_comments(insta_username)
         elif choice == '8':
             insta_username = raw_input("Enter the username of the user: ")
-            get_hashtags(insta_username)
-        elif choice == 'e':
+            hashtag_analysis(insta_username)
+        elif choice == '9':
             exit()
         else:
             print "You have not entered a correct choice"
