@@ -3,11 +3,14 @@ from textblob import TextBlob
 from termcolor import colored
 from textblob.sentiments import NaiveBayesAnalyzer
 import matplotlib.pyplot as plt
+from wordcloud import WordCloud
 
 BASE_URL = 'https://api.instagram.com/v1/'
 APP_ACCESS_TOKEN = '1424263315.eea5f47.b72ecf57f66646a38a5e0e81e3747d48'
 
 Hashtag_list = []
+
+
 
 #Fumction to get your own info
 
@@ -219,6 +222,8 @@ def hashtag_analysis(insta_username):
                     Hashtag_list.append(hashtags)
             print Hashtag_list
 
+
+
             max_hashtag = max(Hashtag_list)
             min_hashtag = min(Hashtag_list)
 
@@ -244,8 +249,8 @@ def hashtag_analysis(insta_username):
 
     else:
         print 'Status code other than 200 recieved'
-
-
+    tags = " ".join(Hashtag_list)
+    wordcloud(tags)
 #Function to get the recent post liked by the user
 
 def recently_liked_media():
@@ -268,7 +273,19 @@ def recently_liked_media():
     else:
         print 'Status code other than 200 recieved!!!'
 
-recently_liked_media()
+
+# Function to create wordcloud
+
+def wordcloud(text):
+    wordcloud = WordCloud(background_color='white',
+                          width=1080,
+                          height=1080).generate(text)
+    plt.figure()
+    plt.imshow(wordcloud, interpolation="bilinear")
+    plt.axis("off")
+    plt.savefig('wordcloud.png')
+    plt.show()
+
 
 
 #Function to start instabot
