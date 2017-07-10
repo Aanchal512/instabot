@@ -9,7 +9,6 @@ APP_ACCESS_TOKEN = '1424263315.eea5f47.b72ecf57f66646a38a5e0e81e3747d48'
 
 Hashtag_list = []
 
-
 #Fumction to get your own info
 
 def self_info():
@@ -247,6 +246,31 @@ def hashtag_analysis(insta_username):
         print 'Status code other than 200 recieved'
 
 
+#Function to get the recent post liked by the user
+
+def recently_liked_media():
+    request_url = (BASE_URL + 'users/self/media/liked?access_token=%s') % (APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    own_media = requests.get(request_url).json()
+    print own_media
+
+    if own_media['meta']['code'] == 200:
+        if len(own_media['data']):
+            liked_media_id = own_media['data'][0]['id']
+            print liked_media_id
+
+            image_name = own_media['data'][0]['id'] + '.jpeg'
+            image_url = own_media['data'][0]['images']['standard_resolution']['url']
+            urllib.urlretrieve(image_url, image_name)
+            print 'Recently liked media is downloaded successfully'
+        else:
+            print 'Post does not exit!!'
+    else:
+        print 'Status code other than 200 recieved!!!'
+
+recently_liked_media()
+
+
 #Function to start instabot
 
 def start_bot():
@@ -263,7 +287,8 @@ def start_bot():
         print '6.Make a comment on the recent post of a user'
         print '7.Delete the negative comments on the post'
         print '8.Collecting hashtags and hashtag ananlysis'
-        print '9.Exit'
+        print '9.Get the recent post liked by the user'
+        print '10.Exit'
 
         choice = raw_input("Enter your choice: ")
         if choice == '1':
@@ -289,6 +314,8 @@ def start_bot():
             insta_username = raw_input("Enter the username of the user: ")
             hashtag_analysis(insta_username)
         elif choice == '9':
+            recently_liked_media()
+        elif choice == '10':
             exit()
         else:
             print "You have not entered a correct choice"
