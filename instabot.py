@@ -11,7 +11,6 @@ APP_ACCESS_TOKEN = '1424263315.eea5f47.b72ecf57f66646a38a5e0e81e3747d48'
 Hashtag_list = []
 
 
-
 #Fumction to get your own info
 
 def self_info():
@@ -220,37 +219,47 @@ def hashtag_analysis(insta_username):
             for x in range(0,len(user_media['data'])):
                 for hashtags in user_media['data'][x]['tags']:
                     Hashtag_list.append(hashtags)
-            print Hashtag_list
 
-
-
-            max_hashtag = max(Hashtag_list)
-            min_hashtag = min(Hashtag_list)
-
-            x = Hashtag_list.count(max_hashtag)
-            y = Hashtag_list.count(min_hashtag)
-
-            total = len(Hashtag_list)
-            a = float(x)*100/ total
-            b = float(y)*100/ total
-
-            labels = max_hashtag, min_hashtag
-            sizes = [a, b]
-            colors = ['red','lightskyblue']
-            explode = (0.2, 0)  # explode the 1st slice
-
-            plt.pie(sizes, explode = explode, labels = labels, colors = colors, autopct = '%1.1f%%',
-                    shadow = True, startangle = 140)
-            plt.axis('equal')
-            plt.title('Hashtag Analysis')
-            plt.show()
+            tags = " ".join(Hashtag_list)
+            menu = True
+            while menu:
+                choice = raw_input('Enter you choice for Hashtag analysis')
+                print 'Enter your choice: '
+                print '1.Hashtag analysis through wordcloud\n'
+                print '2.Hashtag analysis through piechart\n'
+                if choice == '1':
+                    wordcloud(tags)
+                elif choice == '2':
+                    pie_chart()
+                else:
+                    menu = False
         else:
             print 'No recent posts of the user'
 
     else:
         print 'Status code other than 200 recieved'
-    tags = " ".join(Hashtag_list)
-    wordcloud(tags)
+
+#Function to download image of a user
+
+def download_user_image(insta_username):
+    media_id = get_post_id(insta_username)
+    request_url = (BASE_URL + 'media/%s/?access_token=%s') % (media_id, APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    user_media = requests.get(request_url).json()
+
+    if user_media['meta']['code'] == 200:
+        if len(user_media['data']):
+            if user_media['data']['type'] == "image":
+                image_name = user_media['data']['id'] + '.jpeg'
+                image_url = user_media['data']['images']['standard_resolution']['url']
+                urllib.urlretrieve(image_url, image_name)     #using urllib library for downloading the image
+                print 'Your image has been downloaded!'
+            else:
+                print 'The post is not an image'
+    else:
+        print 'Status code other than 200 received!'
+
+
 #Function to get the recent post liked by the user
 
 def recently_liked_media():
@@ -274,6 +283,31 @@ def recently_liked_media():
         print 'Status code other than 200 recieved!!!'
 
 
+#Function to create pie chart
+
+def pie_chart():
+    max_hashtag = max(Hashtag_list)
+    min_hashtag = min(Hashtag_list)
+
+    x = Hashtag_list.count(max_hashtag)
+    y = Hashtag_list.count(min_hashtag)
+
+    total = len(Hashtag_list)
+    a = float(x) * 100 / total
+    b = float(y) * 100 / total
+
+    labels = max_hashtag, min_hashtag
+    sizes = [a, b]
+    colors = ['red', 'lightskyblue']
+    explode = (0.2, 0)  # explode the 1st slice
+
+    plt.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.1f%%',
+            shadow=True, startangle=140)
+    plt.axis('equal')
+    plt.title('Hashtag Analysis')
+    plt.show()
+
+
 # Function to create wordcloud
 
 def wordcloud(text):
@@ -285,7 +319,6 @@ def wordcloud(text):
     plt.axis("off")
     plt.savefig('wordcloud.png')
     plt.show()
-
 
 
 #Function to start instabot
@@ -303,9 +336,10 @@ def start_bot():
         print '5.Like the recent post of a user'
         print '6.Make a comment on the recent post of a user'
         print '7.Delete the negative comments on the post'
-        print '8.Collecting hashtags and hashtag ananlysis'
+        print '8.Hashtag analysis using wordcloud and piechart'
         print '9.Get the recent post liked by the user'
-        print '10.Exit'
+        print '10.Download image of a user'
+        print '11.exit'
 
         choice = raw_input("Enter your choice: ")
         if choice == '1':
@@ -333,6 +367,9 @@ def start_bot():
         elif choice == '9':
             recently_liked_media()
         elif choice == '10':
+            insta_username = raw_input("Enter the username of the user")
+            download_user_image(insta_username)
+        elif choice == '11':
             exit()
         else:
             print "You have not entered a correct choice"
